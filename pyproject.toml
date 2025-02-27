@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "kafka-streaming"
+version = "0.1.0"
+description = "kafka streaming in docker with redpanda"
+authors = ["Prajwal Poojary"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+confluent-kafka = "^2.8.0"
+pyspark = "^3.5.4"
+faker = "^33.3.1"
+python-dotenv = "^1.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
