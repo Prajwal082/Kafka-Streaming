@@ -1,0 +1,8 @@
+version: 2 
+
+sources: 
+  - name: orders
+    database: KAFKA_STREAM
+    schema: PUBLIC
+    tables:
+      - name: ORDERS_STREAM
