@@ -75,10 +75,14 @@ class Structuredstream():
             StructField("OrderId", StringType(), False),
             StructField("OrderDate", DateType(), False),
             StructField("CustomerID", StringType(), False),
+            StructField("CustomerFirstName", StringType(), False),
+            StructField("CustomerLastName", StringType(), False),
+            StructField("CustomerPhone", StringType(), False),
+            StructField("CustomerEmail", StringType(), False),
 
             StructField("Location", StructType([
                 StructField("City", StringType(), False),
-                StructField("Pincode", IntegerType(), False),
+                StructField("Pincode", StringType(), False),
                 StructField("Region", StringType(), False)
             ]), False),
 
@@ -128,6 +132,10 @@ class Structuredstream():
             col('OrderId'),
             col('OrderDate'),
             col('CustomerID'),
+            col('CustomerFirstName'),
+            col('CustomerLastName'),
+            col('CustomerPhone'),
+            col('CustomerEmail'),
             col('Location.*'),
             col('Product.*'),
             col('TotalUnits'),
@@ -140,8 +148,6 @@ class Structuredstream():
             col('ShippingDetails.EstimatedDelivery'),
             col('Timestamp')
             )
-        
-        falattened_json_df.show()
 
         return falattened_json_df
 
@@ -162,7 +168,7 @@ class Structuredstream():
         
         kafka_df = (
             self.spark
-                .read
+                .readStream
                 .format('kafka')
                 .options(**self.kafkaOptions)
                 .load()
@@ -177,8 +183,12 @@ class Structuredstream():
                         OrderId STRING,
                         OrderDate DATE,
                         CustomerID STRING,
+                        Customer_FirstName STRING,
+                        Customer_LastName STRING,
+                        Customer_Phone STRING,
+                        Customer_Email STRING,
                         City STRING,
-                        Pincode LONG,
+                        Pincode INTEGER,
                         Region STRING,
                         ProductID INTEGER,
                         ProductName STRING,

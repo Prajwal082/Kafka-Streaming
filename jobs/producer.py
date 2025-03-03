@@ -31,6 +31,10 @@ class ProducerClass:
                         "user_001", "user_002", "user_003", "user_004", "user_005", 
                         "user_006", "user_007", "user_008", "user_009", "user_010"
                     ]),
+                    "CustomerFirstName" : self.fake.first_name(),
+                    "CustomerLastName" : self.fake.last_name(),
+                    "CustomerPhone" : self.fake.phone_number(),
+                    "CustomerEmail" : self.fake.email(),
                     "Location": {
                         "City": random.choice([
                             "Bengaluru", "Mumbai", "Delhi", "Chennai", "Kolkata", "Hyderabad",
