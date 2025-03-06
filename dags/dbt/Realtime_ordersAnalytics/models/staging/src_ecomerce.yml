@@ -6,3 +6,7 @@ sources:
     schema: PUBLIC
     tables:
       - name: ORDERS_STREAM
+        discription: Real time orders Streaming from Kafka
+        columns:
+          - name: ORDERID
+            description: A Unique UUID
