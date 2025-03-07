@@ -102,6 +102,7 @@ class ProducerClass:
         self.producer.flush()
 
 if __name__  == '__main__':
+    
     bootstrap_server = 'localhost:29092'
     
     topic = "orders_topic"
