@@ -176,6 +176,7 @@ class Structuredstream():
 
         flattened_df = self.applyTransformations(kafka_df)
 
+
         self.spark.sql('CREATE DATABASE IF NOT EXISTS iceberg_catalog.IcebergDB')
 
         self.spark.sql(f"""
@@ -242,4 +243,4 @@ if __name__ =='__main__':
 
     stream.launch()
 
-# docker exec -it sparkstreaming-spark-master-1 spark-submit --master spark://172.19.0.2:7077 --deploy-mode client --packages org.apache.iceberg:iceberg-spark-runtime-3.3:1.8.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4  jobs/sparkstream.py
+# docker exec -it sparkstreaming-spark-master-1 spark-submit --master spark://172.19.0.5:7077 --deploy-mode client --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.8.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4,org.apache.hadoop:hadoop-azure:3.4.1,org.apache.hadoop:hadoop-common:3.4.1,org.apache.hadoop:hadoop-azure-datalake:3.4.1  jobs/sparkstream.py

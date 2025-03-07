@@ -9,6 +9,8 @@ from typing import *
 from confluent_kafka import Producer
 from admin import KafkaAdmin
 
+from jobs.data.product_mapping import product_category_map,category_brand_map
+
 class ProducerClass:
 
     def __init__(self,bootstrap_server:str,topic:str) -> None:
@@ -20,6 +22,24 @@ class ProducerClass:
         self.producer = Producer({'bootstrap.servers' : self.bootstrap_server})
 
         self.fake = Faker(locale='en_IN')
+
+    def generate_product(self):
+
+        category = random.choice(list(product_category_map.keys())) 
+        product_name = random.choice(product_category_map[category])  
+        brand = random.choice(category_brand_map[category])  
+        product_id = random.choice([22334, 45454, 65653, 56546, 21233, 54665, 79898, 12545, 87985, 45878, 32325])
+        unit_price = round(random.uniform(100, 5000), 2) 
+        discount = round(random.uniform(0, 50), 2)
+
+        return {
+            "ProductID": product_id,
+            "ProductName": product_name,
+            "Category": category,
+            "Brand": brand,
+            "UnitPrice": unit_price,
+            "Discount": discount
+        }
 
     def generate_orders(self) -> dict:
         user = self.fake.simple_profile()
@@ -46,22 +66,15 @@ class ProducerClass:
                         ]),
                         "Region": random.choice(["North", "South", "East", "West", "Central"])
                     },
-                    "Product": {
-                        "ProductID": random.choice([22334, 45454, 65653, 56546, 21233, 54665, 79898, 12545, 87985, 45878, 32325]),
-                        "ProductName": random.choice(["Laptop", "Mobile", "Headphones", "TV", "Tablet", "Camera", "Smartwatch"]),
-                        "Category": random.choice(["Electronics", "Appliances", "Fashion", "Groceries", "Books", "Furniture"]),
-                        "Brand": random.choice(["Samsung", "Apple", "Sony", "LG", "Nike", "Adidas", "HP", "Dell"]),
-                        "UnitPrice": round(random.uniform(100, 5000), 2),
-                        "Discount": round(random.uniform(0, 50), 2)
-                    },
-                    "TotalUnits": round(random.uniform(1, 100), 0),
+                    "Product": self.generate_product(),
+                    "TotalUnits": round(random.uniform(1, 50), 0),
                     "POS": random.choice(['DMART', 'RELIANCE MART', 'INSTA MART', 'BIG BASKET', 'AMAZON', 'FLIPKART', 'MORE']),
                     "OrderStatus": random.choice(['PENDING', 'SHIPPED', 'IN-PROGRESS', 'CANCELLED', 'DELIVERED', 'TRANSACTION FAILED']),
                     "TotalAmount": round(random.uniform(10, 50000), 2),
                     "Payment": {
                         "PaymentMethod": random.choice(['UPI', 'CREDIT CARD', 'DEBIT CARD', 'NET BANKING', 'CASH', 'WALLET']),
                         "PaymentStatus": random.choice(["SUCCESS", "FAILED", "PENDING"]),
-                        "TransactionID": self.fake.uuid4() if random.choice([True, False]) else None
+                        "TransactionID": self.fake.uuid4()
                     },
                     "ShippingDetails": {
                         "ShippingAddress": {
@@ -76,14 +89,6 @@ class ProducerClass:
                     },
                     "Timestamp": f"{datetime.now()}"
                 }
-
-
-
-    def generate_products(self) -> dict:
-        ...
-
-    def generate_customers(self) -> dict:
-        ... 
 
     def send_message(self,message):
         try:
@@ -121,4 +126,4 @@ if __name__  == '__main__':
     except KeyboardInterrupt:
         ...
 
-    # p.commit()
+    p.commit()
