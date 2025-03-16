@@ -5,8 +5,6 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
-# from kafka.producer import ProducerClass
-
 
 with DAG(
     dag_id= 'Spark_Streaming_App',
