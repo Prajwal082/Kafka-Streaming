@@ -6,7 +6,7 @@ WITH source_products AS (
         BRAND AS Brand, 
         UNITPRICE AS Unit_Price
     FROM 
-        {{ source('orders','ORDERS_STREAM') }}
+        {{ source('orders','ORDERS') }}
 )
 
 SELECT 

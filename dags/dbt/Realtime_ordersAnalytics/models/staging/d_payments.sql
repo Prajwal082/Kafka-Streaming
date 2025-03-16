@@ -5,7 +5,7 @@ WITH source_payments AS (
         PAYMENTSTATUS AS Payment_Status,
         TRANSACTIONID AS Transaction_Id
         FROM 
-        {{ source('orders','ORDERS_STREAM')}}
+        {{ source('orders','ORDERS')}}
 )
 
 SELECT

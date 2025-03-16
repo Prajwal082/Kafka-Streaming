@@ -1,4 +1,5 @@
 import os 
+import logging
 
 from pyspark.sql import SparkSession
 
@@ -13,6 +14,8 @@ from dotenv import load_dotenv
 class Structuredstream():
 
     def __init__(self,bootstrap_servers:str,topic_name:str,startingOffsets:str) -> None:
+
+        self.logger = logging.getLogger(__class__.__name__)
         
         load_dotenv()
 
@@ -35,6 +38,13 @@ class Structuredstream():
         self.__client_secret = os.environ['CLIENT_SECRET']
         self.__storage_account_name = os.environ['STORAGE_ACCOUNT_NAME']
         self.__container_name = os.environ['CONTAINER_NAME']
+        self.__snowflake_url = os.environ['SNOWFLAKE_URL']
+        self.__snowflake_user = os.environ['SNOWFLAKE_USER']
+        self.__snowflake_password = os.environ['SNOWFLAKE_PASSWORD']
+        self.__snowflake_role = os.environ['SNOWFLAKE_ROLE']
+        self.__snowflake_db = os.environ['SNOWFLAKE_DB']
+        self.__snowflake_schema = os.environ['SNOWFLAKE_SCHEMA']
+        self.__snowflake_warehouse = os.environ['SNOWFLAKE_WAREHOUSE']
 
 
 
@@ -51,22 +61,15 @@ class Structuredstream():
             SparkSession
                 .builder
                 .appName('Kafka Streaming data using Redpanda')
-                .config('spark.jars.packages','org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.8.0')
                 .config('spark.jars.packages','org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4')
                 .config('spark.jars.packages','org.apache.hadoop:hadoop-azure:3.4.1')
                 .config('spark.jars.packages','org.apache.hadoop:hadoop-azure-datalake:3.4.1')
                 .config('spark.jars.packages','org.apache.hadoop:hadoop-common:3.4.1')
+                .config('spark.jars.packages','net.snowflake:spark-snowflake_2.12:3.1.1')
+                .config('spark.jars.packages','net.snowflake:snowflake-jdbc:3.23.0')
                 .config("spark.hadoop.fs.azure.account.key.poctrials.dfs.core.windows.net",self.__account_key)
-                .config('spark.sql.catalog.iceberg_catalog', 'org.apache.iceberg.spark.SparkCatalog')
-                .config("spark.sql.catalog.iceberg_catalog.warehouse", f"abfss://{self.__container_name}@{self.__storage_account_name}.dfs.core.windows.net/iceberg_catalog/")
-                .config("spark.sql.catalog.iceberg_catalog.type", "hadoop")
                 .getOrCreate()
         )
-    
-
-    # def __process_batch(self,df:DataFrame,batch):
-    #     print(f'Now processing batch {batch}')
-    #     df.show()
 
 
     def applyTransformations(self,df:DataFrame) ->DataFrame:
@@ -151,9 +154,6 @@ class Structuredstream():
 
         return falattened_json_df
 
-
-
-
     def launch(self):
 
         #Set config params described above
@@ -164,7 +164,7 @@ class Structuredstream():
         self.spark.conf.set("spark.hadoop.fs.azure.account.oauth2.client.secret."+self.__storage_account_name +".dfs.core.windows.net", self.__client_secret)
         self.spark.conf.set("spark.hadoop.fs.azure.account.oauth2.client.endpoint."+self.__storage_account_name +".dfs.core.windows.net", "https://login.microsoftonline.com/"+self.__tenant_id+"/oauth2/token")
 
-        path = "abfss://"+self.__container_name+"@"+self.__storage_account_name +".dfs.core.windows.net/iceberg_catalog/"
+        path = "abfss://"+self.__container_name+"@"+self.__storage_account_name +".dfs.core.windows.net/"
         
         kafka_df = (
             self.spark
@@ -176,58 +176,41 @@ class Structuredstream():
 
         flattened_df = self.applyTransformations(kafka_df)
 
-
-        self.spark.sql('CREATE DATABASE IF NOT EXISTS iceberg_catalog.IcebergDB')
-
-        self.spark.sql(f"""
-                    CREATE TABLE IF NOT EXISTS iceberg_catalog.IcebergDB.orders (
-                        OrderId STRING,
-                        OrderDate DATE,
-                        CustomerID STRING,
-                        Customer_FirstName STRING,
-                        Customer_LastName STRING,
-                        Customer_Phone STRING,
-                        Customer_Email STRING,
-                        City STRING,
-                        Pincode INTEGER,
-                        Region STRING,
-                        ProductID INTEGER,
-                        ProductName STRING,
-                        Category STRING,
-                        Brand STRING,
-                        UnitPrice DOUBLE,
-                        Discount DOUBLE,
-                        TotalUnits INTEGER,
-                        POS STRING,
-                        OrderStatus STRING,
-                        TotalAmount DOUBLE,
-                        PaymentMethod STRING,
-                        PaymentStatus STRING,
-                        TransactionID STRING,
-                        Shipping_Street STRING,
-                        Shipping_City STRING,
-                        Shipping_State STRING,
-                        Shipping_ZipCode INTEGER,
-                        Shipping_Country STRING,
-                        ShippingMethod STRING,
-                        EstimatedDelivery DATE,
-                        Timestamp TIMESTAMP)
-                    USING iceberg 
-                """)
         
+        def process_batch(batchDF:DataFrame,batchID:int):
+            self.logger.info(f'Now processing batch {batchID}')
+        
+            (
+                batchDF
+                .write
+                .format('snowflake')
+                .options(**sfOptions) 
+                .option('dbtable','orders')
+                .mode('append')
+                .save()
+            )
 
-        # flattened_df.write.format('iceberg').mode('overwrite').option('path',path+'IcebergDB/orders').saveAsTable('iceberg_catalog.IcebergDB.orders')
+            batchDF.show()
+
+        sfOptions = {
+                        "sfURL": self.__snowflake_url,
+                        "sfDatabase": self.__snowflake_db,
+                        "sfSchema": self.__snowflake_schema,
+                        "sfWarehouse": self.__snowflake_warehouse,
+                        "sfRole": self.__snowflake_role,
+                        "sfuser": self.__snowflake_user,
+                        "sfpassword": self.__snowflake_password,
+                        "autopushdown": "on"  # Enables Snowflake pushdown optimization
+                    }
 
 
         (
             flattened_df
             .writeStream
             .outputMode('append')
-            .format('iceberg')
-            .trigger(processingTime = '10 seconds')
-            .option('checkpointLocation',path +'/IcebergDB/checkpoint/')
-            .option('table','iceberg_catalog.IcebergDB.orders')
-            .option('path',path+'IcebergDB/orders')
+            .foreachBatch(process_batch)
+            .trigger(once=True)
+            .option('checkpointLocation',path +'checkpoint/')
             .start()
             .awaitTermination()
         )
@@ -243,4 +226,4 @@ if __name__ =='__main__':
 
     stream.launch()
 
-# docker exec -it sparkstreaming-spark-master-1 spark-submit --master spark://172.19.0.5:7077 --deploy-mode client --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.8.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4,org.apache.hadoop:hadoop-azure:3.4.1,org.apache.hadoop:hadoop-common:3.4.1,org.apache.hadoop:hadoop-azure-datalake:3.4.1  jobs/sparkstream.py
+# docker exec -it sparkstreaming-spark-master-1 spark-submit --master spark://172.20.0.4:7077 --deploy-mode client --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.8.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.4,org.apache.hadoop:hadoop-azure:3.4.1,org.apache.hadoop:hadoop-common:3.4.1,org.apache.hadoop:hadoop-azure-datalake:3.4.1  jobs/sparkstream.py

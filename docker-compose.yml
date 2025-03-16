@@ -12,7 +12,7 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.5}
+  image: ${AIRFLOW_IMAGE_NAME:-custom-image}
   # build: .
   environment:
     &airflow-common-env
@@ -37,9 +37,11 @@ x-airflow-common:
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/kafka:/opt/airflow/kafka
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/dags/dbt:/usr/local/airflow/dbt:rw
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -178,7 +180,7 @@ services:
   spark-master:
     image : bitnami/spark:latest
     volumes : 
-      - ./jobs:/opt/bitnami/spark/jobs
+      - ./kafka:/opt/bitnami/spark/kafka
     command: bin/spark-class org.apache.spark.deploy.master.Master
     environment:
       - SPARK_MODE = master
@@ -194,7 +196,7 @@ services:
   spark-worker-1:
     image : bitnami/spark:latest
     volumes : 
-      - ./jobs:/opt/bitnami/spark/jobs
+      - ./kafka:/opt/bitnami/spark/kafka
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
@@ -209,7 +211,7 @@ services:
   spark-worker-2:
     image : bitnami/spark:latest
     volumes : 
-      - ./jobs:/opt/bitnami/spark/jobs
+      - ./kafka:/opt/bitnami/spark/kafka
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
@@ -237,6 +239,8 @@ services:
       retries: 5
       start_period: 5s
     restart: always
+    networks:
+      - redpanda_network
 
   redis:
     # Redis is limited to 7.2-bookworm due to licencing change
@@ -251,6 +255,8 @@ services:
       retries: 50
       start_period: 30s
     restart: always
+    networks:
+      - redpanda_network
 
   airflow-webserver:
     <<: *airflow-common
@@ -264,6 +270,8 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    networks:
+      - redpanda_network
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -279,6 +287,8 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    networks:
+      - redpanda_network
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -302,6 +312,8 @@ services:
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
     restart: always
+    networks:
+      - redpanda_network
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -317,6 +329,8 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    networks:
+      - redpanda_network
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -344,7 +358,7 @@ services:
         disk_available=$$(df / | tail -1 | awk '{print $$4}')
         warning_resources="false"
         if (( mem_available < 4000 )) ; then
-          echo
+          echoe rule:line-length
           echo -e "\033[1;33mWARNING!!!: Not enough memory available for Docker.\e[0m"
           echo "At least 4GB of memory required. You have $$(numfmt --to iec $$((mem_available * one_meg)))"
           echo
@@ -374,7 +388,7 @@ services:
         mkdir -p /sources/logs /sources/dags /sources/plugins
         chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
         exec /entrypoint airflow version
-    # yamllint enable rule:line-length
+    # yamllint enabl
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_MIGRATE: 'true'

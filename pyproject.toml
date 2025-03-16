@@ -13,6 +13,8 @@ faker = "^33.3.1"
 python-dotenv = "^1.0.1"
 dbt-snowflake = "^1.9.1"
 streamlit = "^1.43.0"
+astronomer-cosmos = "^1.9.1"
+plotly = "^6.0.0"
 
 
 [build-system]

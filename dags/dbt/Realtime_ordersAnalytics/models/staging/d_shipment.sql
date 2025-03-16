@@ -9,7 +9,7 @@ WITH source_shipping AS (
         SHIPPING_COUNTRY AS Country, 
         ESTIMATEDDELIVERY AS Estimated_Delivery_Date
     FROM 
-        {{ source('orders','ORDERS_STREAM') }}
+        {{ source('orders','ORDERS') }}
 )
 
 SELECT

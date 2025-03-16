@@ -1,3 +1,0 @@
-from .dags import (
-    main
-)

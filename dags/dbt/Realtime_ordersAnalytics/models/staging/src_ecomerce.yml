@@ -5,7 +5,7 @@ sources:
     database: KAFKA_STREAM
     schema: PUBLIC
     tables:
-      - name: ORDERS_STREAM
+      - name: ORDERS
         discription: Real time orders Streaming from Kafka
         columns:
           - name: ORDERID

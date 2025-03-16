@@ -11,7 +11,7 @@ WITH source_orders AS(
         TOTALAMOUNT AS Total_Amount,
         TIMESTAMP AS System_Timestamp
     FROM 
-    {{ source('orders','ORDERS_STREAM') }}
+    {{ source('orders','ORDERS') }}
 )
 
 SELECT 

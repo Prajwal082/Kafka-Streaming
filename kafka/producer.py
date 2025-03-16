@@ -9,7 +9,7 @@ from typing import *
 from confluent_kafka import Producer
 from admin import KafkaAdmin
 
-from jobs.data.product_mapping import product_category_map,category_brand_map
+from data.product_mapping import product_category_map,category_brand_map
 
 class ProducerClass:
 
@@ -103,7 +103,7 @@ class ProducerClass:
 
 if __name__  == '__main__':
     
-    bootstrap_server = 'localhost:29092'
+    bootstrap_server = 'redpanda-1:9092'
     
     topic = "orders_topic"
 
