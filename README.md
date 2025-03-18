@@ -4,7 +4,8 @@
 A complete data pipeline for processing simulated order data from streaming sources into a real-time dashboard using Kafka, leveraging Spark Structured Streaming for processing, Snowflake for warehousing, DBT for transformation, and a Streamlit web app for dashboard hosting.
 
 ## Architecture
-![diagram-export-3-16-2025-1_57_16-PM](https://github.com/user-attachments/assets/998e827c-1731-4a11-a65c-8ce6e4a0d6c7)
+![diagram-export-3-18-2025-4_37_12-PM](https://github.com/user-attachments/assets/8ae867ca-7cbe-44b7-9510-0ace6406a678)
+
 
 1. Kafka: A Kafka cluster hosted on Redpanda will receive messages from a producer application simulating order data.
 2. Spark: Spark Structured Streaming will consume messages from the assigned topic, apply transformations and schema, and write the processed data to a Snowflake-managed 
