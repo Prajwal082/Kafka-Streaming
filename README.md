@@ -10,8 +10,8 @@ A complete data pipeline for processing simulated order data from streaming sour
 1. **Kafka** : A Kafka cluster hosted on Redpanda will receive messages from a producer application simulating order data.
 2. **Spark** : Spark Structured Streaming will consume messages from the assigned topic, apply transformations and schema, and write the processed data to a Snowflake-managed 
               Iceberg table whoose metadata and data would be stored in ADLS.
-**3. Snowflake** : Snowflake will serve as the data warehouse, storing the data in a denormalized format.
-**4. dbt** : Used to perform transformations and aggregate data to generate key metrics.
-**5. Streamlit** : Hosts the final web application on top of Snowflake for visualization.
-**6. Airflow** : To Orchestrate the Entire Data Pipeline.
-**7. Docker** : To Host all services and Application.
+3. **Snowflake** : Snowflake will serve as the data warehouse, storing the data in a denormalized format.
+4. **dbt** : Used to perform transformations and aggregate data to generate key metrics.
+5. **Streamlit** : Hosts the final web application on top of Snowflake for visualization.
+6. **Airflow** : To Orchestrate the Entire Data Pipeline.
+7. **Docker** : To Host all services and Application.
