@@ -75,7 +75,7 @@ fig = px.pie(df, names="REGION", values="COUNT", title="Orders by Region",
 st.plotly_chart(fig, use_container_width=True)
 
 
-df = conn.query("SELECT * FROM KAFKA_STREAM.PUBLIC.VW_CUSTOMERS_METRICS;;", ttl="10m")
+df = conn.query("SELECT DISTINCT CUSTOMER_ID,AVERAGE_ORDER_VALUE FROM KAFKA_STREAM.PUBLIC.VW_CUSTOMERS_METRICS;;", ttl="10m")
 
 
 # Rename columns for better readability
